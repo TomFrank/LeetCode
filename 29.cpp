@@ -5,33 +5,38 @@ using namespace std;
 class Solution {
 public:
 	int divide(int dividend, int divisor) {
-		if(dividend == INT_MIN && divisor == -1)
-			return INT_MAX;
+		if(dividend == INT_MIN) {
+			if(divisor == -1) return INT_MAX; // only case that may overflow
+			else if(divisor == INT_MIN) return 1;
+		}
+		if(divisor == INT_MIN) return 0; // whatever the divident is, the answer is 0
+		if(divisor == 1)return dividend;
 		
-//		if(dividend )
-		
-		if(dividend == INT_MIN)
-//		cout << INT_MIN << endl;
 		int ret = 0;
 		int sign = (dividend > 0) ^ (divisor > 0);
-//		dividend = abs(dividend);
-//		divisor = abs(divisor);
-		while(dividend >= divisor) {
-			int i = 1;
-			int dr = divisor;
-			while((dr<<1) <= dividend) {
+		
+		// exclude all cases that divisor is INT_MIN, so abs() will not overflow
+		divisor = abs(divisor);
+		if(dividend == INT_MIN) {
+			dividend += divisor;
+			ret++;
+		}
+
+		// abs() will not overflow
+		dividend = abs(dividend);
+		while (dividend >= divisor) {
+			int i = 1, dr = divisor;
+			while (dividend - dr >= dr) {
 				dr <<= 1;
-				i  <<= 1;
+				i <<= 1;
 			}
 			dividend -= dr;
 			ret += i;
 		}
+
 		return sign == 0 ? ret : -ret;
 	}
 	
-	int div_neg(int dividend, int divisor) {
-		
-	}
 };
 
 int stringToInteger(string input) {
