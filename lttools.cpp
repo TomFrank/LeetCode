@@ -13,9 +13,14 @@
 #include <random>
 #include <type_traits>
 #include <memory>
-
-using namespace std;
-
+#include <cassert>
+#include <bitset>
+#if __cplusplus > 201703L
+#include <format>
+#else
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
+#endif
 struct ListNode {
 	int val;
 	ListNode *next;
@@ -34,25 +39,25 @@ struct TreeNode {
 };
 
 template<typename T>
-ostream& operator<<(ostream& os, const vector<T>& v) {
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
 	printf("[");
-	copy(v.cbegin(), v.cend(), experimental::make_ostream_joiner(cout, ","));
+	copy(v.cbegin(), v.cend(), std::experimental::make_ostream_joiner(std::cout, ","));
 	printf("]");
 	return os;
 }
 
 template<typename T>
-ostream& operator<<(ostream& os, const vector<vector<T>>& vv) {
+std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<T>>& vv) {
 	printf("[");
 	for_each(vv.begin(), vv.end(), [](auto v){
-		cout << v;
+		std::cout << v;
 	});
 	printf("]");
 	return os;
 }
 
 static
-ostream& operator<<(ostream& os, ListNode* head) {
+std::ostream& operator<<(std::ostream& os, ListNode* head) {
 	printf("[");
 	while (head != nullptr) {
 		printf("%d%s", head->val, head->next != nullptr ? "," : "");
@@ -64,37 +69,36 @@ ostream& operator<<(ostream& os, ListNode* head) {
 
 namespace LT {
 	
-static vector<string> split(const string& str, const string& regex_str) {
-	std::regex regexz(regex_str);
-	std::vector<std::string> list(std::sregex_token_iterator(str.begin(), str.end(), regexz, -1),
-		std::sregex_token_iterator());
-	return list;
-}
+//static std::vector<std::string> split(const std::string& str, const std::string& regex_str) {
+//	std::regex regexz(regex_str);
+//	std::vector<std::string> list(std::sregex_token_iterator(str.begin(), str.end(), regexz, -1),
+//		std::sregex_token_iterator());
+//	return list;
+//}
 
-
-static vector<int> array_from(const string& s) {
+static std::vector<int> array_from(const std::string& s) {
 	assert(s.size() >= 2 && s.front()== '[' && s.back() == ']');
-	const regex rg(R"([^,]+)");
-	vector<std::string> list(sregex_token_iterator(s.begin()+1, s.begin()+s.size()-1, rg), sregex_token_iterator());
-	vector<int> arr;
-	transform(list.cbegin(), list.cend(), back_inserter(arr), [](string ns){
+	std::regex rg(R"([^,]+)");
+	std::vector<std::string> list(std::sregex_token_iterator(s.begin()+1, s.begin()+s.size()-1, rg), std::sregex_token_iterator());
+	std::vector<int> arr;
+	transform(list.cbegin(), list.cend(), back_inserter(arr), [](std::string ns){
 		return stoi(ns);
 	});
 	return arr;
 }
 	
-static vector<vector<int>> array2d_from(const string& s) {
+static std::vector<std::vector<int>> array2d_from(const std::string& s) {
 	assert(s.size() >= 2 && s.front() == '[' && s.back() == ']');
-	const regex rg(R"(\[[^\]]*\])");
-	std::vector<std::string> list(sregex_token_iterator(s.begin()+1, s.end(), rg), sregex_token_iterator());
-	vector<vector<int>> arr;
-	transform(list.begin(), list.end(), back_inserter(arr), [](auto s){
+	const std::regex rg(R"(\[[^\]]*\])");
+	std::vector<std::string> list(std::sregex_token_iterator(s.begin()+1, s.end(), rg), std::sregex_token_iterator());
+	std::vector<std::vector<int>> arr;
+	std::transform(list.begin(), list.end(), std::back_inserter(arr), [](auto s){
 		return array_from(s);
 	});
 	return arr;
 }
 
-static ListNode* list_from(const vector<int>& v) {
+static ListNode* list_from(const std::vector<int>& v) {
 	auto head = ListNode();
 	auto cur = &head;
 	for (auto a:v) {
@@ -104,7 +108,7 @@ static ListNode* list_from(const vector<int>& v) {
 	return head.next;
 }
 	
-static ListNode* list_from(const string& s) {
+static ListNode* list_from(const std::string& s) {
 	return list_from(array_from(s));
 }
 
@@ -116,11 +120,6 @@ static bool is_equal(ListNode* a, ListNode* b) {
 	}
 	return a == nullptr && b == nullptr;
 }
-	
-static bool is_equal(TreeNode* a, TreeNode* b) {
-	perror("no implementation");
-	abort();
-}
 
 static void print_inorder(TreeNode* root) {
 	if (root == nullptr) return;
@@ -130,14 +129,14 @@ static void print_inorder(TreeNode* root) {
 }
 	
 template<typename... T, typename P, typename R>
-static void batch_test(initializer_list<tuple<tuple<T...>, P>> data, R f) {
+static void batch_test(std::initializer_list<std::tuple<std::tuple<T...>, P>> data, R f) {
 	for (const auto& d: data) {
 		auto [in, out] = d;
 		auto y = apply(f, in);
 		if (y == out) {
-			cout << y << "==" << out << " ✅" << endl;
+			std::cout << y << "==" << out << " ✅" << std::endl;
 		} else {
-			cout << y << "!=" << out << " ❌" << endl;
+			std::cout << y << "!=" << out << " ❌" << std::endl;
 		}
 	}
 }
@@ -148,7 +147,7 @@ private:
 	using F = OUT(IN...);
 	using MemF = OUT (C::*)(IN...);
 	
-	function<F> f;
+	std::function<F> f;
 	MemF mf;
 	
 	OUT res;
@@ -156,21 +155,22 @@ public:
 	Tester(F f):f(f) {}
 	Tester(MemF f):mf(f) {}
 	
-	Tester& test(const IN&... in) {
-		if constexpr (is_void_v<C>) {
-			res = f(forward<IN>(in)...);
+	Tester& test(std::remove_reference_t<IN>&&... in) {
+		if constexpr (std::is_void_v<C>) {
+			res = f(std::forward<IN>(in)...);
 		} else {
-			auto callee = mem_fn(mf);
-			res = callee(new C, in...);
+			auto callee = std::mem_fn(mf);
+			std::unique_ptr<C> p(new C);
+			res = callee(p, std::forward<IN>(in)...);
 		}
 		return *this;
 	}
 	
-	void equals(const OUT& out) {
+	void equals(OUT&& out) {
 		if (equals(out, res)) {
-			cout << "✅ " << res << " == " << out << endl;
+			std::cout << "✅ " << res << " == " << out << std::endl;
 		} else {
-			cout << "❌ " << res << " != " << out << endl;
+			std::cout << "❌ " << res << " != " << out << std::endl;
 		}
 	}
 	
@@ -179,14 +179,122 @@ public:
 	}
 	
 private:
+	bool areEqualRel(float a, float b, float epsilon=1e-5) {
+		return (fabs(a - b) <= epsilon * std::max(fabs(a), fabs(b)));
+	}
+	
 	bool equals(const OUT& a, const OUT& b) {
-		if constexpr (is_same_v<OUT, ListNode*> || is_same_v<OUT, TreeNode*>) {
+		if constexpr (std::is_same_v<OUT, ListNode*> || std::is_same_v<OUT, TreeNode*>) {
 			return is_equal(a, b);
+		} else if constexpr (std::is_floating_point_v<OUT>) {
+			return areEqualRel(a, b);
 		} else {
 			return a == b;
 		}
 	}
 };
+	
+class Codec {
+public:
+	int nullnum = -131313;
+	int stopnum = -242424;
+	// Encodes a tree to a single string.
+	std::string serialize(TreeNode* root) {
+		if (root == nullptr)
+			return "[]";
+		std::vector<int> v;
+		std::queue<TreeNode*> q;
+		q.push(root);
+		while (!q.empty()) {
+			TreeNode* t = q.front();
+			q.pop();
+			if (t != nullptr) {
+				v.push_back(t->val);
+				q.push(t->left);
+				q.push(t->right);
+			} else {
+				v.push_back(nullnum);
+			}  
+		}
+		while (v.back() == nullnum) {
+			v.pop_back();
+		}
+		std::string res = "[";
+		for (int a: v) {
+			if (a != nullnum) {
+				res += std::to_string(a);
+			} else {
+				res += "null";
+			}
+			res += ",";
+		}
+		res.back() = ']';
+		// cout << res << " ";
+		return res;
+	}
+	
+	// Decodes your encoded data to tree.
+	TreeNode* deserialize(const std::string data) {
+		assert(data.size() >= 2 && data.front() == '[' && data.back() == ']');
+		// cout << fmt::format("data={}", data) << endl;
+		if (data[1] == ']')
+			return nullptr;
+		
+		auto nextnum = [&,i=1ul]() mutable {
+			while (i < data.size()) {
+				try {
+					size_t j;
+					int v = stoi(data.substr(i), &j);
+					// cout << fmt::format("v={}; ", v);
+					i += j+1;
+					return v;
+				} catch (std::invalid_argument const& e) {
+					i += 5;
+					return nullnum;
+				}
+			}
+			return stopnum;
+		};
+		
+		TreeNode* root = new TreeNode(nextnum());
+		std::queue<TreeNode*> q;
+		q.push(root);
+		while (!q.empty()) {
+			TreeNode* t = q.front();
+			q.pop();
+			int lv = nextnum();
+			int rv = nextnum();
+			if (lv == stopnum)
+				break;
+			if (lv != nullnum) {
+				t->left = new TreeNode(lv);
+				q.push(t->left);
+			}
+			if (rv == stopnum)
+				break;
+			if (rv != nullnum) {
+				t->right = new TreeNode(rv);
+				q.push(t->right);
+			}
+		}
+		
+		return root;
+	}
+};
+	
+static
+std::ostream& operator<<(std::ostream& os, TreeNode* root) {
+	std::cout << Codec().serialize(root) << std::endl;
+}
+	
+static TreeNode* tree_from(const std::string& s) {
+	return Codec().deserialize(s);
+}
+
+static bool is_equal(TreeNode* a, TreeNode* b) {
+	return Codec().serialize(a) == Codec().serialize(b);
+}
+
 }
 
 static
@@ -203,6 +311,13 @@ static
 auto operator"" _list(const char* s, const size_t len) {
 	return LT::list_from(s);
 }
+
+static
+auto operator"" _tree(const char* s, const size_t len) {
+	return LT::tree_from(s);
+}
+
+using namespace std;
 
 // https://stackoverflow.com/a/21439212/9685108
 #include <tuple>
@@ -250,11 +365,11 @@ namespace std{
 	{
 		size_t
 		operator()(std::tuple<TT...> const& tt) const
-		{                                              
-			size_t seed = 0;                             
+		{
+			size_t seed = 0;
 			HashValueImpl<std::tuple<TT...> >::apply(seed, tt);    
-			return seed;                                 
-		}                                              
+			return seed;
+		}
 		
 	};
 }
