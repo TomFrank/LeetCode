@@ -67,6 +67,21 @@ std::ostream& operator<<(std::ostream& os, ListNode* head) {
 	return os;
 }
 
+template<class... Types>
+static std::ostream& operator<<(std::ostream& os, const std::tuple<Types...>& t) {
+	os << fmt::format("({}, {})", std::get<0>(t), std::get<1>(t));
+	return os;
+}
+
+template<class T, class C, class CMP>
+static std::ostream& operator<<(std::ostream& os, std::priority_queue<T, C, CMP> q) {
+	while (!q.empty()) {
+		os << q.top() << ", ";
+		q.pop();
+	}
+	return os;
+}
+
 namespace LT {
 	
 //static std::vector<std::string> split(const std::string& str, const std::string& regex_str) {
@@ -284,7 +299,8 @@ public:
 	
 static
 std::ostream& operator<<(std::ostream& os, TreeNode* root) {
-	std::cout << Codec().serialize(root) << std::endl;
+	os << Codec().serialize(root) << std::endl;
+	return os;
 }
 	
 static TreeNode* tree_from(const std::string& s) {
