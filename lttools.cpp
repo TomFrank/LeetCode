@@ -15,12 +15,13 @@
 #include <memory>
 #include <cassert>
 #include <bitset>
-#if __cplusplus > 201703L
-#include <format>
-#else
+#include <iterator>
+//#if __cplusplus > 201703L
+//#include <format>
+//#else
 #define FMT_HEADER_ONLY
 #include <fmt/format.h>
-#endif
+//#endif
 struct ListNode {
 	int val;
 	ListNode *next;
@@ -155,6 +156,11 @@ static void batch_test(std::initializer_list<std::tuple<std::tuple<T...>, P>> da
 		}
 	}
 }
+	
+template<class T>
+concept is_sortable = requires(T t) {
+	std::sort(t.begin(), t.end());
+};
 
 template<typename OUT, class C=void, typename ...IN>
 class Tester {
@@ -166,9 +172,11 @@ private:
 	MemF mf;
 	
 	OUT res;
+	
+	const bool unordered_result;
 public:
-	Tester(F f):f(f) {}
-	Tester(MemF f):mf(f) {}
+	Tester(F f, bool unordered_result=false):f(f), unordered_result(unordered_result) {}
+	Tester(MemF f, bool unordered_result=false):mf(f), unordered_result(unordered_result) {}
 	
 	Tester& test(std::remove_reference_t<IN>&&... in) {
 		if constexpr (std::is_void_v<C>) {
@@ -198,7 +206,7 @@ private:
 		return (fabs(a - b) <= epsilon * std::max(fabs(a), fabs(b)));
 	}
 	
-	bool equals(const OUT& a, const OUT& b) {
+	bool equals(OUT& a, OUT& b) {
 		if constexpr (std::is_same_v<OUT, ListNode*> || std::is_same_v<OUT, TreeNode*>) {
 			return is_equal(a, b);
 		} else if constexpr (std::is_floating_point_v<OUT>) {
@@ -206,6 +214,14 @@ private:
 		} else {
 			return a == b;
 		}
+	}
+
+	bool equals(is_sortable auto& a, is_sortable auto& b) {
+		if (unordered_result) {
+			std::sort(a.begin(), a.end());
+			std::sort(b.begin(), b.end());
+		}
+		return a == b;
 	}
 };
 	
