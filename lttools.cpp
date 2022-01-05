@@ -174,9 +174,12 @@ private:
 	OUT res;
 	
 	const bool unordered_result;
+	
 public:
-	Tester(F f, bool unordered_result=false):f(f), unordered_result(unordered_result) {}
-	Tester(MemF f, bool unordered_result=false):mf(f), unordered_result(unordered_result) {}
+	bool show_error_only;
+	
+	Tester(F f, bool unordered_result=false, bool show_error_only=false):f(f), unordered_result(unordered_result), show_error_only(show_error_only) {}
+	Tester(MemF f, bool unordered_result=false, bool show_error_only=false):mf(f), unordered_result(unordered_result), show_error_only(show_error_only) {}
 	
 	Tester& test(std::remove_reference_t<IN>&&... in) {
 		if constexpr (std::is_void_v<C>) {
@@ -189,9 +192,21 @@ public:
 		return *this;
 	}
 	
+	Tester& test(const std::remove_reference_t<IN>&... in) {
+		if constexpr (std::is_void_v<C>) {
+			res = f(in...);
+		} else {
+			auto callee = std::mem_fn(mf);
+			std::unique_ptr<C> p(new C);
+			res = callee(p, in...);
+		}
+		return *this;
+	}
+	
 	void equals(OUT&& out) {
 		if (equals(out, res)) {
-			std::cout << "✅ " << res << " == " << out << std::endl;
+			if (!show_error_only)
+				std::cout << "✅ " << res << " == " << out << std::endl;
 		} else {
 			std::cout << "❌ " << res << " != " << out << std::endl;
 		}
@@ -206,6 +221,14 @@ private:
 		return (fabs(a - b) <= epsilon * std::max(fabs(a), fabs(b)));
 	}
 	
+	bool equals(is_sortable auto& a, is_sortable auto& b) {
+		if (unordered_result) {
+			std::sort(a.begin(), a.end());
+			std::sort(b.begin(), b.end());
+		}
+		return a == b;
+	}
+	
 	bool equals(OUT& a, OUT& b) {
 		if constexpr (std::is_same_v<OUT, ListNode*> || std::is_same_v<OUT, TreeNode*>) {
 			return is_equal(a, b);
@@ -216,13 +239,7 @@ private:
 		}
 	}
 
-	bool equals(is_sortable auto& a, is_sortable auto& b) {
-		if (unordered_result) {
-			std::sort(a.begin(), a.end());
-			std::sort(b.begin(), b.end());
-		}
-		return a == b;
-	}
+	
 };
 	
 class Codec {
