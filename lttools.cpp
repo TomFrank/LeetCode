@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <numeric>
 #include <regex>
 #include <array>
@@ -184,7 +185,7 @@ public:
 	Tester& test(std::remove_reference_t<IN>&&... in) {
 		if constexpr (std::is_void_v<C>) {
 			res = f(std::forward<IN>(in)...);
-		} else {
+		} else { 
 			auto callee = std::mem_fn(mf);
 			std::unique_ptr<C> p(new C);
 			res = callee(p, std::forward<IN>(in)...);
