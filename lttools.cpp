@@ -8,6 +8,7 @@
 #include <numeric>
 #include <regex>
 #include <array>
+#include <set>
 #include <unordered_set>
 #include <unordered_map>
 #include <experimental/iterator>
